@@ -1,24 +1,35 @@
-import logo from './logo.svg';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
+
+//pages
+import Header from './components/Header/Header';
+import Homepage from './pages/Homepage/Homepage';
+import Contact from './pages/Contact/Contact';
+import AboutUs from './pages/About Us/Aboutus';
+// import Error from './pages/Errorpage/Errorpage';
+
+import { BiMenuAltRight } from 'react-icons/bi';
+import { AiOutlineClose } from 'react-icons/ai';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <div className='open-menu'>
+        <BiMenuAltRight id='m' className='open' />
+        <AiOutlineClose id='m' className='close' />
+      </div>
+      <div className='menu'>
+        <ul>
+          <a href='#home' className='active'>
+            home
+          </a>
+          <a href='#about'>About us</a>
+          <a href='#contact'>Contact</a>
+        </ul>
+      </div>
+      <Homepage />
+      <AboutUs />
+    </>
   );
 }
 
