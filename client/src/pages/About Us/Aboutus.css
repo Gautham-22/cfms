@@ -216,10 +216,6 @@
         transition-delay: calc(var(--k) * 120ms);
     }
 
-    .App.about .container .card:nth-of-type(3) {
-        display: none;
-    }
-
     .App.about .container .card img {
         height: 120px;
         min-width: 120px;
