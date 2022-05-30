@@ -15,7 +15,8 @@
     aspect-ratio: 1/1;
     height: 360px;
     border-radius: 50%;
-    background: rgb(0, 255, 221);
+    /* background: rgb(0, 255, 221); */
+    background: #39A2DB;
     filter: blur(110px);
     top: 5%;
     right: 12%;
@@ -55,7 +56,8 @@
     left: 0;
     font-size: 20px;
     font-weight: 100;
-    color: rgba(200, 227, 228, 0.897);
+    /* color: rgba(200, 227, 228, 0.897); */
+    color: #073944;
     font-family: 'Varela Round', sans-serif;
     transform: rotate(-90deg) translateY(-100%);
     opacity: 0;
@@ -73,7 +75,8 @@
     content: '';
     height: 1px;
     width: 120px;
-    background-color: rgba(200, 227, 228, 0.897);
+    /* background-color: rgba(200, 227, 228, 0.897); */
+    background-color: #073944;
     transform: translateX(110%);
 }
 
@@ -82,7 +85,8 @@
     content: '';
     height: 1px;
     width: 120px;
-    background-color: rgba(200, 227, 228, 0.897);
+    /* background-color: rgba(200, 227, 228, 0.897); */
+    background-color: #073944;
     transform: translateX(-110%);
 }
 
@@ -110,7 +114,8 @@
 
 .App.about .container .card p {
     display: inline-block;
-    color: rgb(150, 248, 252);
+    /* color: rgb(150, 248, 252); */
+    color: #39A2DB;
     font-size: 25px;
     margin-left: 25px;
     font-weight: 500;
@@ -119,7 +124,7 @@
 
 .App.about .container .card p i {
     font-size: 17px;
-    color: white;
+    color: rgb(31, 31, 31);
     font-weight: 400;
 }
 
@@ -131,15 +136,18 @@
     align-items: center;
     cursor: pointer;
     margin-right: 100px;
+    bottom: 1%;
 }
 
 .App.about .container .members span {
-    color: rgb(171, 237, 240);
+    /* color: rgb(171, 237, 240); */
+    color: #39A2DB;
     font-weight: 100;
 }
 
 .App.about .container .members .arrow-right {
-    fill: rgb(164, 232, 235);
+    /* fill: rgb(164, 232, 235); */
+    fill: #39A2DB;
     transform: scale(1.3);
     margin-left: 3px;
 }
@@ -185,7 +193,8 @@
         left: 0;
         font-size: 20px;
         font-weight: 100;
-        color: rgba(200, 227, 228, 0.897);
+        /* color: rgba(200, 227, 228, 0.897); */
+        color: #073944;
         font-family: 'Varela Round', sans-serif;
         transform: rotate(-90deg) translateY(-100%);
         opacity: 0;
@@ -222,7 +231,8 @@
         text-align: center;
         display: inline-block;
         max-width: 90%;
-        color: rgb(150, 248, 252);
+        /* color: rgb(150, 248, 252); */
+        color: #39A2DB;
         font-size: 20px;
         margin-left: 0px;
         margin-top: 20px;
@@ -232,7 +242,7 @@
 
     .App.about .container .card p i {
         font-size: 18px;
-        color: white;
+        color: rgb(31, 31, 31);
         font-weight: 400;
     }
 }

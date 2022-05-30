@@ -2,7 +2,7 @@ import React from 'react';
 import './Homepage.css';
 
 //icons
-import { BsTwitch } from 'react-icons/bs';
+import { SiGmail } from 'react-icons/si';
 import { FaDiscord } from 'react-icons/fa';
 import { SiTwitter } from 'react-icons/si';
 import { SiTelegram } from 'react-icons/si';
@@ -23,11 +23,11 @@ function Homepage() {
             repellat ducimus doloribus.
           </span>
           <a href='#feed' className='feed-btn'>
-            Donate
+            Start a Fundraiser
           </a>
         </div>
         <div className='socials'>
-          <BsTwitch className='icon' />
+          <SiGmail className='icon' />
           <FaDiscord className='icon' />
           <SiTwitter className='icon' />
           <SiTelegram className='icon' />

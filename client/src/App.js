@@ -29,6 +29,7 @@ function App() {
       </div>
       <Homepage />
       <AboutUs />
+      <Contact />
     </>
   );
 }

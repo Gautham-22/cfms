@@ -45,10 +45,10 @@ function Aboutus() {
           </p>
         </div>
 
-        <div className='members'>
+        {/* <div className='members'>
           <span>View more</span>
           <BsChevronDoubleRight className='arrow-right' />
-        </div>
+        </div> */}
       </div>
     </div>
   );

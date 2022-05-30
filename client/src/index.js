@@ -51,6 +51,7 @@ introtxt.innerHTML = introtxt.innerHTML
 
 const homepage = document.querySelector('.App.home');
 const about = document.querySelector('.App.about');
+const contact = document.querySelector('.App.contact');
 
 const windowHeight = window.innerHeight;
 const animationPoint = 500;
@@ -58,18 +59,22 @@ const animationPoint = 500;
 function scrollAnimation() {
   const home_top = homepage.getBoundingClientRect().top;
   const about_top = about.getBoundingClientRect().top;
+  const contact_top = contact.getBoundingClientRect().top;
 
   if (home_top < windowHeight - animationPoint) {
-    console.log('hOME');
     homepage.classList.add('active');
     clearActives();
     links[0].classList.add('active');
   }
   if (about_top < windowHeight - animationPoint) {
-    console.log('BOU');
     about.classList.add('active');
     clearActives();
     links[1].classList.add('active');
+  }
+  if (contact_top < windowHeight - animationPoint) {
+    contact.classList.add('active');
+    clearActives();
+    links[2].classList.add('active');
   }
 }
 

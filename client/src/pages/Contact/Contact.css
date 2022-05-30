@@ -1,6 +1,110 @@
-.container {
-    height: 100vh;
+@import url("https://fonts.googleapis.com/css2?family=Varela+Round&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap");
+
+.App.contact {
+    /* background: linear-gradient(140deg, rgb(33, 81, 116), rgb(1, 16, 19)); */
+    background: #EFF4F7;
+    z-index: 11;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.App.contact::before {
+    position: absolute;
+    content: "";
+    aspect-ratio: 1/1;
+    height: 360px;
+    border-radius: 50%;
+    background: rgb(0, 255, 255);
+    filter: blur(150px);
+    top: 5%;
+    left: 10%;
+    transform: scale(0);
+    transform-origin: bottom;
+    opacity: 0;
+}
+
+.App.contact.active::before {
+    animation: reveal 1s ease-out 1s forwards;
+    opacity: 0.3;
+}
+
+.App.contact h1 {
+    /* color: rgba(255, 255, 255, 0.877); */
+    color: #073944;
+    font-size: 70px;
+    font-weight: 900;
+    font-family: "Varela Round", sans-serif;
+    transform: translateY(120px);
+    opacity: 0;
+}
+
+.App.contact.active h1 {
+    animation: show 0.6s ease-out 0.3s forwards;
+}
+
+.App.contact .socials {
+    margin-bottom: 120px;
+}
+
+.App.contact .socials .icon {
+    /* color: rgb(222, 244, 245); */
+    color: #cdd3d6;
+    font-size: 80px;
+    margin: 0 40px;
+    cursor: pointer;
+    transform: translateY(300px);
+    opacity: 0;
+    transition: color 0.1s ease-out;
+}
+
+.App.contact.active .icon {
+    animation: show 0.6s ease-out forwards;
+    animation-delay: calc(var(--i) * 300ms);
+}
+
+.App.contact .to-top {
+    position: absolute;
+    bottom: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
+    opacity: 0;
+    transform: translateY(50px);
+}
+
+.App.contact.active .to-top {
+    animation: show 0.6s ease-out 1.4s forwards;
+}
+
+.App.contact .to-top a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.App.contact .to-top a:hover {
+    color: rgb(171, 240, 240);
+}
+
+.App.contact.active .icon:nth-child(1):hover {
+    color: #46C1F6;
+}
+
+.App.contact.active .icon:nth-child(2):hover {
+    color: #ff9800;
+}
+
+.App.contact.active .icon:nth-child(3):hover {
+    color: rgb(147, 14, 255);
+}
+
+.App.contact.active .icon:nth-child(4):hover {
+    color: rgb(0, 183, 255);
+}
+
+.App.contact.active .icon:nth-child(5):hover {
+    color: rgb(255, 74, 74, 0.952);
 }

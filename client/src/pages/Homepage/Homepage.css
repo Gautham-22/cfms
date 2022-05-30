@@ -1,15 +1,3 @@
-/* * {
-    margin: 0;
-}
-
-.App.home {
-    margin: 1.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-repeat: no-repeat;
-} */
-
 @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
 
@@ -19,7 +7,8 @@
     aspect-ratio: 1/1;
     height: 360px;
     border-radius: 50%;
-    background: rgb(231, 0, 252);
+    /* background: rgb(231, 0, 252); */
+    background: #39A2DB;
     filter: blur(130px);
     top: 5%;
     right: 16%;
@@ -40,7 +29,8 @@
   left: 1%;
   font-size: 20px;
   font-weight: 100;
-  color: rgba(200, 227, 228, 0.897);
+  /* color: rgba(200, 227, 228, 0.897); */
+  color: #073944;
   font-family: 'Varela Round', sans-serif;
   transform: rotate(-90deg) translateY(-100%);
   opacity: 0;
@@ -58,8 +48,9 @@
   content: '';
   height: 1px;
   width: 120px;
-  background-color: rgba(200, 227, 228, 0.897);
-  transform: translateX(110%);
+  /* background-color: rgba(200, 227, 228, 0.897); */
+  background-color: #073944;
+  transform: translateX(100%);
 }
 
 .App.home h3::before {
@@ -67,8 +58,9 @@
   content: '';
   height: 1px;
   width: 120px;
-  background-color: rgba(200, 227, 228, 0.897);
-  transform: translateX(-110%);
+  /* background-color: rgba(200, 227, 228, 0.897); */
+  background-color: #073944;
+  transform: translateX(-100%);
 }
 
 /* .image {
@@ -114,7 +106,8 @@
 }
 
 .App.home .text-container h1 {
-    color: rgb(144, 253, 253);
+    /* color: rgb(144, 253, 253); */
+    color: #073944;
     font-size: 50px;
     font-family: 'Roboto', 'sans-serif';
     transform: translateY(100%);
@@ -127,7 +120,7 @@
 
 .App.home .text-container h2 {
     position: relative;
-    color: rgb(231, 47, 248);
+    color: rgb(191, 108, 199);
     text-transform: uppercase;
     font-size: 25px;
     line-height: 70px;
@@ -148,7 +141,7 @@
   align-items: center;
   flex-wrap: wrap;
   margin: 10px 0 0;
-  color: white;
+  color: rgb(31, 31, 31);
   font-size: 17px;
   letter-spacing: 1px;
   line-height: 20px;
@@ -169,8 +162,8 @@
 .App.home .text-container .feed-btn {
   position: relative;
   height: 65px;
-  width: 200px;
-  border: 2px solid cyan;
+  width: 230px;
+  border: 2px solid #39A2DB;
   border-radius: 100px;
   display: flex;
   justify-content: center;
@@ -180,7 +173,7 @@
   text-transform: capitalize;
   font-size: 20px;
   cursor: pointer;
-  color: rgb(102, 210, 243);
+  color: #39A2DB;
   font-weight: 900;
   transform: translateY(100%);
   opacity: 0;
@@ -188,6 +181,11 @@
 
 .App.home.active .text-container .feed-btn {
   animation: show 1.3s ease 1.5s forwards;
+}
+
+.App.home.active .text-container .feed-btn:hover {
+  background: #39A2DB;
+  color: azure;
 }
 
 .App.home .socials {
@@ -212,14 +210,16 @@
   content: '';
   height: 120px;
   width: 1px;
-  background-color: rgba(211, 235, 241, 0.445);
+  /* background-color: rgba(211, 235, 241, 0.445); */
+  background-color: #073944;
   transform: translateY(-154%);
 }
 
 .App.home .socials .icon {
   position: relative;
   margin: 13px 0;
-  fill: rgba(255, 255, 255, 0.877);
+  /* fill: rgba(255, 255, 255, 0.877); */
+  fill: #073944;
   transform: scale(1.4);
   cursor: pointer;
 }

@@ -16,7 +16,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(150deg, rgb(20, 70, 105), rgb(1, 16, 19));
+  background: #EFF4F7;
   overflow-x: hidden;
 }
 
@@ -157,13 +157,3 @@ html {
     align-items: center;
     scroll-snap-align: start;
 }
-
-/* .section {
-  position: relative;
-  width: 100vw;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  scroll-snap-align: start;
-} */
