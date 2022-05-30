@@ -80,7 +80,7 @@
 }
 
 .App.contact .to-top a {
-    color: white;
+    color: rgb(124, 122, 122);
     text-decoration: none;
     font-size: 18px;
 }
@@ -107,4 +107,20 @@
 
 .App.contact.active .icon:nth-child(5):hover {
     color: rgb(255, 74, 74, 0.952);
+}
+
+@media screen and (max-width: 500px) {
+    .App.contact h1 {
+        font-size: 35px;
+    }
+    .App.contact .socials .icon {
+        font-size: 25px;
+        margin: 0px, 0px;
+    }
+    .App.contact.active .icon:nth-child(5) {
+        display: none;
+    }
+    .App.contact.active .icon:nth-child(3) {
+        display: none;
+    }
 }

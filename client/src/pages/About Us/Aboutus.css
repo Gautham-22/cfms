@@ -154,7 +154,7 @@
 
 @media (max-width: 850px) {
     .App.about {
-        margin-top: 10vh;
+        margin-top: 5vh;
         justify-content: start;
     }
 
