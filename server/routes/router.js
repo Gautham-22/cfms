@@ -4,6 +4,7 @@ const router = express.Router();
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const mysql = require("promise-mysql");
+const { v4: uuidv4 } = require('uuid');
 
 // connection
 let pool;
@@ -37,7 +38,7 @@ router.post("/signup", async (req,res) => {
         }
 
         const hash = genHash(inputs.password);
-        const result = await connection.query(`INSERT INTO user VALUES('${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0})`);
+        const result = await connection.query(`INSERT INTO user VALUES('${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0},${0})`);
         if(!result || result.length == 0) {
             return res.status(500).json({message: "Insertion failed!"});
         }
@@ -126,7 +127,7 @@ router.post("/post", async (req, res) => {
             return res.status(404).json({message: "Cannot find your username!"}); 
         }
 
-        const id = genSecret();
+        const id = uuidv4();
         const verified = "no";
         const result = await connection.query(`INSERT INTO post VALUES('${id}','${verified}','${inputs.title}','${inputs.description}', '${inputs.type}','${userkey}', ${inputs.expected_fund}, ${0}, CURDATE())`);
         if(!result || result.length == 0) {
@@ -276,6 +277,57 @@ router.put(`${process.env.secret_route}/verify/:postid`, async (req, res) => {
     res.status(200).json({ message: "Post verified!"});
 });
 
+// transaction
+router.post("/transaction", async (req, res) => {
+
+    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
+        return res.status(401).json({message: "Login/Signup to make a transaction"});
+    }
+
+    const { log, username } = req.cookies.auth;
+    if(!bcrypt.compareSync(process.env.success, log) || !username) {
+        return res.status(401).json({message: "Login/Signup to make a transaction!"});
+    }
+
+    const inputs = req.body;
+    
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        const users = await connection.query(`SELECT username from user`);
+        let userkey = "";
+        for(let i = 0; i < users.length; i++) {
+            if(bcrypt.compareSync(users[i].username, username)) {
+                userkey = users[i].username;
+                break;
+            }
+        }
+        if(!userkey) {
+            return res.status(404).json({message: "Cannot find specified username!"}); 
+        }
+
+        let result = await connection.query(`SELECT * from post where post_id='${inputs.post_id}' and verified='yes'`);
+        if(!result || result.length == 0) {
+            return res.status(404).json({message: "No such post exists!"});
+        }
+
+        result = await connection.query(`INSERT into transaction VALUES('${userkey}','${inputs.post_id}',${inputs.amount}, CURDATE())`);
+        if(!result || result.length == 0) {
+            return res.status(404).json({message: "No such post exists!"});
+        }
+
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Transaction success"});
+});
+
 function genHash(password) {
     let salt = bcrypt.genSaltSync(10);
     let hash = bcrypt.hashSync(password,salt);
@@ -285,7 +337,7 @@ function genHash(password) {
 function genSecret() {
     let randomString = crypto.randomBytes(64).toString("hex");
     return randomString;
-} 
+}
 
 module.exports = router;
 

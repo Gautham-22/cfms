@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React from 'react';
 import './App.css';
 
 //pages
-import Header from './components/Header/Header';
 import Homepage from './pages/Homepage/Homepage';
 import Contact from './pages/Contact/Contact';
 import AboutUs from './pages/About Us/Aboutus';
