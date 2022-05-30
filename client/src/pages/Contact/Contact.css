@@ -109,12 +109,21 @@
     color: rgb(255, 74, 74, 0.952);
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 800px) {
     .App.contact h1 {
-        font-size: 35px;
+        font-size: 45px;
     }
     .App.contact .socials .icon {
-        font-size: 25px;
+        font-size: 35px;
+    }
+}
+
+@media screen and (max-width: 550px) {
+    .App.contact h1 {
+        font-size: 38px;
+    }
+    .App.contact .socials .icon {
+        font-size: 32px;
         margin: 0px, 0px;
     }
     .App.contact.active .icon:nth-child(5) {
