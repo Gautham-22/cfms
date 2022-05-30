@@ -38,7 +38,7 @@ router.post("/signup", async (req,res) => {
         }
 
         const hash = genHash(inputs.password);
-        const result = await connection.query(`INSERT INTO user VALUES('${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0})`);
+        const result = await connection.query(`INSERT INTO user VALUES('${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0},${0})`);
         if(!result || result.length == 0) {
             return res.status(500).json({message: "Insertion failed!"});
         }
