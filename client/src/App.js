@@ -7,11 +7,15 @@ import Main from './components/dashboard/Main';
 import Account from './components/account/Account';
 import Navbar from './components/navbar/Navbar';
 import Errorpage from './pages/Errorpage/Errorpage';
+import Adminlogin from './components/admin/Adminlogin';
+import Adminhome from './components/admin/Adminhome';
 
 const App = () => {
   const [login, setLogin] = useState(false);
+  const [adminLogin, setAdminLogin] = useState(false);
   const [appnav, setAppnav] = useState(false);
   const [isAccount, setIsAccount] = useState(false);
+  console.log(process.env.REACT_APP_ADMIN_LOGIN);
 
   useEffect(() => {
     const getCredentials = async () => {
@@ -30,12 +34,35 @@ const App = () => {
       }
     };
     getCredentials();
+    const getAdminCredentials = async () => {
+      try {
+        let res = await fetch('http://localhost:5000/cfms/adminCredentials', {
+          credentials: 'include',
+          method: 'GET',
+        });
+        if (res.ok) {
+          setAdminLogin(true);
+        } else {
+          setAdminLogin(false);
+        }
+      } catch (err) {
+        // console.log(err);
+      }
+    };
+    getAdminCredentials();
   }, []);
 
   return (
     <div>
       <BrowserRouter>
-        {appnav && <Navbar setIsAccount={setIsAccount} setLogin={setLogin} />}
+        {appnav && (
+          <Navbar
+            setIsAccount={setIsAccount}
+            adminLogin={adminLogin}
+            setAdminLogin={setAdminLogin}
+            setLogin={setLogin}
+          />
+        )}
         <Routes>
           <Route
             path='/'
@@ -62,6 +89,16 @@ const App = () => {
           <Route
             path='/account'
             element={login ? <Account isAccount={isAccount} /> : <Errorpage />}
+          />
+          <Route
+            path={process.env.REACT_APP_ADMIN_LOGIN}
+            element={<Adminlogin setAdminLogin={setAdminLogin} />}
+          />
+          <Route
+            path={process.env.REACT_APP_ADMIN_ROUTE}
+            element={
+              adminLogin ? <Adminhome setAppnav={setAppnav} /> : <Errorpage />
+            }
           />
         </Routes>
       </BrowserRouter>
