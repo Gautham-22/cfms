@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {useNavigate} from "react-router-dom";
-import './form.css'
+import '../form.css'
 import { BiMenuAltRight } from 'react-icons/bi';
 import { AiOutlineClose } from 'react-icons/ai';
 import { Snackbar, Alert } from '@mui/material';
