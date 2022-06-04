@@ -1,32 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, 
     Toolbar, Typography, Paper, Divider, Button
 } 
 from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
-
-function createData(name, donation) {
-  return {
-    name,
-    donation
-  };
-}
-
-const rows = [
-  createData('Cupcake', 305),
-  createData('Donut', 452),
-  createData('Eclair', 262),
-  createData('Frozen yoghurt', 159),
-  createData('Gingerbread', 356),
-  createData('Honeycomb', 408),
-  createData('Ice cream sandwich', 237),
-  createData('Jelly Bean', 375),
-  createData('KitKat', 518, 26.0),
-  createData('Lollipop', 392, 0.2),
-  createData('Marshmallow', 318),
-  createData('Nougat', 360),
-  createData('Oreo', 437),
-];
+import dateFormat from "dateformat";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -127,46 +105,106 @@ const EnhancedTableToolbar = () => {
   );
 };
 
-const View = ({openDonate}) => {
-    const [order, setOrder] = React.useState('desc');
-    const [orderBy, setOrderBy] = React.useState('donation');
+const View = ({openDonate, postId, isView, setDonateTo, setIsEdit, setIsView, setEditPost}) => {
+  const [postDetails, setPostDetails] = useState(null);
+  const [rows, setRows] = useState([]);
+  const [isCreated, setIsCreated] = useState(false);
+  const [isDonated, setIsDonated] = useState(false);
+  const [donatedAmt, setdonatedAmt] = useState(0);
 
-    const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
 
-    const desc = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Dictum at tempor commodo ullamcorper a. Et leo duis ut diam quam nulla porttitor. Eget est lorem ipsum dolor. Aliquam ut porttitor leo a diam. In ornare quam viverra orci sagittis eu volutpat odio facilisis. Nam at lectus urna duis convallis convallis. Lacinia quis vel eros donec ac. In eu mi bibendum neque egestas congue quisque. Massa sapien faucibus et molestie.Gravida neque convallis a cras semper. Imperdiet proin fermentum leo vel orci. Ut sem nulla pharetra diam sit amet. Eu volutpat odio facilisis mauris sit amet massa. Mi ipsum faucibus vitae aliquet nec ullamcorper sit amet. Magna fermentum iaculis eu non diam phasellus. Nibh praesent tristique magna sit amet purus. Accumsan in nisl nisi scelerisque. Nunc vel risus commodo viverra maecenas. Aliquam sem et tortor consequat id porta nibh. Sed velit dignissim sodales ut eu sem. Faucibus turpis in eu mi bibendum neque egestas. Non nisi est sit amet facilisis magna etiam. Varius sit amet mattis vulputate enim nulla aliquet. Velit euismod in pellentesque massa. Consequat semper viverra nam libero justo laoreet sit amet. Venenatis urna cursus eget nunc. Consectetur libero id faucibus nisl tincidunt eget nullam non.\
-                  Pulvinar pellentesque habitant morbi tristique. Nunc lobortis mattis aliquam faucibus purus. Dolor sit amet consectetur adipiscing elit ut. Vulputate odio ut enim blandit volutpat maecenas volutpat blandit aliquam. Dictum at tempor commodo ullamcorper a lacus vestibulum sed. Molestie a iaculis at erat pellentesque adipiscing commodo elit. Posuere lorem ipsum dolor sit. Quam id leo in vitae turpis massa. Mattis pellentesque id nibh tortor id aliquet. Arcu cursus euismod quis viverra nibh. Id semper risus in hendrerit.";
-    return (
-        <Box sx={{ maxWidth: '1500px', margin: '0 auto 20px', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'center', md: 'start' }, justifyContent: 'space-around', flexWrap: 'wrap'}}>
+  useEffect(() => {
+    const fetchPost = async (postId) => {
+    try {
+      let res = await fetch(`http://localhost:5000/cfms/post/${postId}`, {
+          credentials: 'include',
+          method: 'GET'
+      });
+      let response = await res.json();
+      if(!res.ok) {
+          // error
+          return console.log(response);
+      }
+      setPostDetails(await response.posts);
+      setIsCreated(await response.created);
+      console.log(await response.posts);
+
+    } catch(err) {
+      console.log(err);
+    }
+    }
+    fetchPost(postId);
+
+    const fetchDonators = async (postId) => {
+      try {
+        let res = await fetch(`http://localhost:5000/cfms/donators/${postId}`, {
+            credentials: 'include',
+            method: 'GET'
+        });
+        let response = await res.json();
+        if(!res.ok) {
+            // error
+            return console.log(response);
+        }
+        setRows(await response.transactions);
+        setIsDonated(await response.donated);
+        setdonatedAmt(await response.donatedAmt);
+      } catch(err) {
+        console.log(err);
+      }
+    }
+    fetchDonators(postId);
+  }, [isView]);
+
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('donation');
+
+  const handleRequestSort = (event, property) => {
+  const isAsc = orderBy === property && order === 'asc';
+      setOrder(isAsc ? 'desc' : 'asc');
+      setOrderBy(property);
+  };
+
+  const handleEdit = () => {
+    setEditPost(postDetails[0]);
+    setIsView(false);
+    setIsEdit(true);
+  }
+
+  return (
+      <Box sx={{ maxWidth: '1500px', margin: '0 auto 20px', padding: '20px 0px', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'center', md: 'start' }, justifyContent: 'space-around', flexWrap: 'wrap'}}>
+          {postDetails && postDetails.length &&           
             <Paper sx={{ maxWidth: '700px', margin: '40px 0px', padding: '25px', flex: { md: '0.45'} }} >
                 <Typography style={{marginBottom: '20px'}} variant='h6'>
-                    Plant Monitoring System 
+                    {postDetails[0].title}
                     <span style={{ display: 'inline-block', marginLeft: '20px' }}></span>
-                    <Typography sx={{ display: { xs: 'block', sm: 'inline'}}} variant='caption'>Created by Gautham, 29/05/22</Typography>    
+                    <Typography sx={{ display: { xs: 'block', sm: 'inline'}}} variant='caption'>Created by {postDetails[0].author}, {dateFormat(new Date(postDetails[0].date_created), "dddd, mmmm dS, yyyy")}</Typography>    
                 </Typography>
                 <Divider />
                 <Typography color="primary" variant="button" style={{display: 'block', fontSize: '1.05rem', margin: '20px 0px'}}>Description</Typography>
-                <Typography variant="body" style={{display: 'block', marginBottom: '20px'}}>{desc}</Typography>
+                <Typography variant="body" style={{display: 'block', marginBottom: '20px'}}>{postDetails[0].description}</Typography>
                 <Divider />
                 <Typography variant='button' style={{display: 'block', margin: '20px 0px'}}>
                   <b>Expected amount: </b>
-                  ₹50000
+                  ₹{postDetails[0].expected_fund}
                 </Typography>
                 <Typography variant='button' style={{display: 'block', margin: '20px 0px'}}>
                   <b>Fund raised: </b>
-                  ₹20000
+                  ₹{postDetails[0].post_fund}
                 </Typography>
-                <Typography variant='button' style={{display: 'block', margin: '20px 0px'}}>
-                  <b>Your contribution: </b>
-                  ₹1000
-                </Typography>
-                <Button size="small" color="primary" onClick={() => openDonate()}>₹ Donate</Button>
-                <Button size="small" color="secondary">Edit</Button>
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                  <Button size="small" color="primary" onClick={() => {setDonateTo(postId); openDonate();}}>₹ Donate</Button>
+                  {
+                    isCreated && <Button size="small" color="secondary" onClick={handleEdit}>Edit</Button>
+                  }
+                  {
+                    isDonated && <Button size="small" color="secondary">Donated ₹{donatedAmt}</Button>
+                  }
+                </div>
             </Paper>
-            <Paper sx={{ maxWidth: { xs: '500px'}, height: '480px', overflow: 'auto', margin: '20px 0px', padding: '15px', flex: { md: '0.32'} }}>
+          } 
+          {rows && rows.length!=0 &&   
+            <Paper sx={{ maxWidth: { xs: '500px'}, height: '480px', overflow: 'auto', margin: '40px 0px', padding: '15px', flex: { md: '0.32'} }}>
                 <EnhancedTableToolbar />
                 <TableContainer>
                     <Table
@@ -204,8 +242,9 @@ const View = ({openDonate}) => {
                     </Table>
                 </TableContainer>
             </Paper>
-        </Box>
-    );
+          }
+      </Box>
+  );
 }
 
 export default View;

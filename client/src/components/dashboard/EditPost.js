@@ -7,24 +7,42 @@ const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-const EditPost = () => {
-    const [title, setTitle] = useState('Plant monitoring system');
-    const [category, setCategory] = useState(10);
-    const [desc, setDesc] = useState('lorem ipsum');
-    const [amount, setAmount] = useState('40000');
+const EditPost = ({editPost, setIsView, setIsEdit, setEditAlert, setEditStatus, postId}) => {
+    const [title, setTitle] = useState(editPost.title);
+    const [category, setCategory] = useState(editPost.category);
+    const [desc, setDesc] = useState(editPost.description);
+    const amount = editPost.expected_fund;
 
-    const [open, setOpen] = React.useState(false);
-  
-    const handleClose = (event, reason) => {
-      if (reason === 'clickaway') {
-        return;
-      }
-  
-      setOpen(false);
-    };
+    const handleSubmit = async (e) => {
+        try {
+            let res = await fetch("http://localhost:5000/cfms/post", {
+                credentials: 'include',
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({title, description: desc, category, id: postId})
+            });
+            
+            if(!res.ok) {
+                setEditAlert(true);
+                return setEditStatus(false);
+            }
 
-    const handleSubmit = (e) => {
-      setOpen(true);
+            setTitle("");
+            setCategory("");
+            setDesc("");
+            
+        } catch(err) {
+            setEditAlert(true);
+            return setEditStatus(false);
+        }
+
+        setEditAlert(true);
+        setEditStatus(true);
+        setIsView(true);
+        setIsEdit(false);
     }
 
     return (
@@ -38,7 +56,8 @@ const EditPost = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    boxShadow: "2px 3px 20px -5px"
+                    boxShadow: "2px 3px 20px -5px", 
+                    background: '#f4f4f4'
                 }}
             >
                 <TextField 
@@ -52,7 +71,7 @@ const EditPost = () => {
                 />
                 <TextareaAutosize
                     aria-label="empty textarea" placeholder="Description"  minRows={5}
-                    style={{ maxWidth: '370px', margin: '10px 0px', padding:'10px' }}
+                    style={{ width: '450px', margin: '10px 0px', padding:'10px' }}
                     value={desc} onChange={(e) => setDesc(e.target.value)}
                 />
                 <Select
@@ -66,11 +85,11 @@ const EditPost = () => {
                     <MenuItem value="">
                         <em>None</em>
                     </MenuItem>
-                    <MenuItem value={10}>Business</MenuItem>
-                    <MenuItem value={20}>Startup</MenuItem>
-                    <MenuItem value={30}>Agriculture</MenuItem>
-                    <MenuItem value={40}>Education</MenuItem>
-                    <MenuItem value={50}>Social</MenuItem>
+                    <MenuItem value={"Business"}>Business</MenuItem>
+                    <MenuItem value={"Startup"}>Startup</MenuItem>
+                    <MenuItem value={"Agriculture"}>Agriculture</MenuItem>
+                    <MenuItem value={"Education"}>Education</MenuItem>
+                    <MenuItem value={"Social"}>Social</MenuItem>
                 </Select>
                 <FormHelperText>Select category</FormHelperText>
                 <Stack direction="row" spacing={2} style={{marginTop: '20px', display: 'flex', justifyContent: 'space-between'}}>
@@ -89,11 +108,6 @@ const EditPost = () => {
                 </Stack>
             </Box>
         </FormControl>
-        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
-            <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-                Post saved successfully!
-            </Alert>
-        </Snackbar>
     </Box>
     );
 };

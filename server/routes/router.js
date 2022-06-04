@@ -19,7 +19,32 @@ const connectDB = async () => {
 }
 connectDB();
 
+const checkCookie = async (req, res, next) => {
+    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.userkey) {
+        return res.status(401).json({message: "Please Login/Signup"});
+    }
+
+    const { log, userkey } = req.cookies.auth;
+    console.log({ log, userkey });
+    if(!bcrypt.compareSync(process.env.success, log) || !userkey) {
+        return res.status(401).json({message: "Please Login/Signup"});
+    }
+    console.log("yes");
+    next();
+}
+
 // ---------------- ROUTES --------------------
+
+// check login
+router.get("/credentials", checkCookie, (req,res) => {
+    res.status(200).json({message: 'authenticated'});
+});
+
+// logout 
+router.get("/logout", checkCookie, (req,res) => {
+    res.clearCookie("auth");
+    res.end();
+});
 
 // user signup
 router.post("/signup", async (req,res) => {
@@ -32,16 +57,26 @@ router.post("/signup", async (req,res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const exists = await connection.query(`SELECT * FROM user where username='${inputs.username}'`);
+        const exists = await connection.query(`SELECT * FROM user where username='${inputs.username}' or mail='${inputs.mail}'`);
         if(exists && exists.length > 0) {
-            return res.status(500).json({message: "Username already exists Try another!"}); 
+            connection.release();
+            return res.status(500).json({message: "Username or mail already exists. Try another!"}); 
         }
 
+        const auth = {
+            log: genHash(process.env.success),
+            userkey: genHash(uuidv4())
+        }
+   
         const hash = genHash(inputs.password);
-        const result = await connection.query(`INSERT INTO user VALUES('${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0},${0})`);
+        const result = await connection.query(`INSERT INTO user VALUES('${auth.userkey}', '${inputs.username}','${hash}','${inputs.mail}','${inputs.number}',${0},${0}, CURDATE())`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(500).json({message: "Insertion failed!"});
         }
+        
+        console.log(auth);
+        res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000, httpOnly: true, path: "/"});
 
         connection.release();
 
@@ -49,16 +84,11 @@ router.post("/signup", async (req,res) => {
         return res.status(500).json({ message: err.message });
     }
 
-    const auth = {
-        log: genHash(process.env.success),
-        username: genHash(inputs.username)
-    }
-    res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000});
     res.status(200).json({ message: "Insertion success"});
 });
 
 // user login
-router.get("/login",  async (req,res) => {
+router.post("/login",  async (req,res) => {
  
     const inputs = req.body;
     
@@ -68,14 +98,23 @@ router.get("/login",  async (req,res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const result = await connection.query(`SELECT pass from user where username='${inputs.username}'`);
+        const result = await connection.query(`SELECT * from user where username='${inputs.username}'`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(404).json({message: "Username doesn't exist!"});
         }
 
         if(!bcrypt.compareSync(inputs.password, result[0].pass)) {
+            connection.release();
             return res.status(401).json({message: "Password doesn't match!"});
         }
+
+        const auth = {
+            log: genHash(process.env.success),
+            userkey: result[0].userkey
+        }
+        console.log(auth)
+        res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000, httpOnly: true, path: "/"});
 
         connection.release();
 
@@ -83,25 +122,11 @@ router.get("/login",  async (req,res) => {
         return res.status(500).json({ message: err.message });
     }
 
-    const auth = {
-        log: genHash(process.env.success),
-        username: genHash(inputs.username)
-    }
-    res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000});
     res.status(200).json({ message: "Login success"});
 });
 
 // create a post
-router.post("/post", async (req, res) => {
-
-    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
-        return res.status(401).json({message: "Login/Signup to create a post"});
-    }
-
-    const { log, username } = req.cookies.auth;
-    if(!bcrypt.compareSync(process.env.success, log) || !username) {
-        return res.status(401).json({message: "Login/Signup to create a post"});
-    }
+router.post("/post", checkCookie, async (req, res) => {
 
     const inputs = req.body;
 
@@ -111,26 +136,21 @@ router.post("/post", async (req, res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const users = await connection.query(`SELECT username FROM user`);
-        if(!users || users.length == 0) {
+        const user = await connection.query(`SELECT username FROM user where userkey='${req.cookies.auth.userkey}'`);
+        if(!user || user.length == 0) {
+            connection.release();
             return res.status(404).json({message: "No user exists"}); 
         }
-
-        let userkey = "";
-        for(let i = 0; i < users.length; i++) {
-            if(bcrypt.compareSync(users[i].username, username)) {
-                userkey = users[i].username;
-                break;
-            }
-        }
-        if(!userkey) {
-            return res.status(404).json({message: "Cannot find your username!"}); 
-        }
-
+        console.log(user);
+        console.log(inputs.description.length);
         const id = uuidv4();
         const verified = "no";
-        const result = await connection.query(`INSERT INTO post VALUES('${id}','${verified}','${inputs.title}','${inputs.description}', '${inputs.type}','${userkey}', ${inputs.expected_fund}, ${0}, CURDATE())`);
+        let desc = inputs.description;
+        desc = desc.replace(/[^\w\s]/gi, '')
+        
+        const result = await connection.query(`INSERT INTO post VALUES('${id}','${verified}','${inputs.title}','${desc}', '${inputs.type}','${req.cookies.auth.userkey}', ${inputs.expected_fund}, ${0}, CURDATE())`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(500).json({message: "Insertion failed!"});
         }
 
@@ -143,17 +163,35 @@ router.post("/post", async (req, res) => {
     res.status(200).json({ message: "Post Creation success"});
 });
 
+// edit a post
+router.put("/post", checkCookie, async (req, res) => {
+
+    const inputs = req.body;
+
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        const post = await connection.query(`UPDATE post SET title='${inputs.title}', description='${inputs.description}', category='${inputs.category}' where post_id='${inputs.id}' and created_user='${req.cookies.auth.userkey}'`);
+        console.log(post);
+        if(!post || post.length == 0) {
+            connection.release();
+            return res.status(404).json({message: "No such post exists"}); 
+        }
+
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Post Updation success"});
+});
+
 // retreive all the posts
-router.get("/posts", async (req, res) => {
-
-    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
-        return res.status(401).json({message: "Login/Signup to see all the posts"});
-    }
-
-    const { log, username } = req.cookies.auth;
-    if(!bcrypt.compareSync(process.env.success, log) || !username) {
-        return res.status(401).json({message: "Login/Signup to see all the posts"});
-    }
+router.get("/posts", checkCookie, async (req, res) => {
 
     let posts = [];
     try {
@@ -173,17 +211,8 @@ router.get("/posts", async (req, res) => {
     res.status(200).json({ message: "Post retreival success", posts});
 });
 
-// retreive posts created by a user
-router.get("/posts/created/:userid", async (req, res) => {
-
-    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
-        return res.status(401).json({message: "Login/Signup to see the post"});
-    }
-
-    const { log, username } = req.cookies.auth;
-    if(!bcrypt.compareSync(process.env.success, log) || !username) {
-        return res.status(401).json({message: "Login/Signup to see the post"});
-    }
+// retreive specific post
+router.get("/post/:postid", checkCookie, async (req, res) => {
 
     let posts = [];
     try {
@@ -192,8 +221,54 @@ router.get("/posts/created/:userid", async (req, res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        posts = await connection.query(`SELECT * FROM post where verified='yes' and created_user_id='${req.params.userid}'`);
+        posts = await connection.query(`SELECT *, post.fund_raised AS post_fund, user.username AS author FROM post, user where post.post_id='${req.params.postid}' and post.created_user=user.userkey`);
+    
+        if(await posts[0].created_user == req.cookies.auth.userkey) {
+            connection.release();
+            return res.status(200).json({ message: "Post retreival success", posts, created: true});
+        }
+        connection.release();
 
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Post retreival success", posts, created: false});
+});
+
+// retreive posts created by a user
+router.get("/posts/created", checkCookie, async (req, res) => {
+
+    let posts = [];
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        posts = await connection.query(`SELECT * FROM post where created_user='${req.cookies.auth.userkey}'`);
+
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Post retreival success", posts});
+});
+
+// retreive posts donated by a user
+router.get("/posts/donated", checkCookie, async (req, res) => {
+
+    let posts = [];
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        posts = await connection.query(`SELECT *, transaction.amount FROM post, transaction where post.post_id=transaction.post_id and transaction.user_id='${req.cookies.auth.userkey}'`);
+        console.log(posts);
         connection.release();
 
     } catch(err) {
@@ -215,10 +290,12 @@ router.get(`${process.env.secret_route}`, async (req,res) => {
 
         const result = await connection.query(`SELECT pass from adm_user where username='${inputs.username}'`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(404).json({message: "Admin Username doesn't exist!"});
         }
 
         if(!bcrypt.compareSync(inputs.password, result[0].pass)) {
+            connection.release();
             return res.status(401).json({message: "Admin Password doesn't match!"});
         }
 
@@ -278,16 +355,7 @@ router.put(`${process.env.secret_route}/verify/:postid`, async (req, res) => {
 });
 
 // transaction
-router.post("/transaction", async (req, res) => {
-
-    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
-        return res.status(401).json({message: "Login/Signup to make a transaction"});
-    }
-
-    const { log, username } = req.cookies.auth;
-    if(!bcrypt.compareSync(process.env.success, log) || !username) {
-        return res.status(401).json({message: "Login/Signup to make a transaction!"});
-    }
+router.post("/transaction", checkCookie, async (req, res) => {
 
     const inputs = req.body;
     
@@ -297,25 +365,22 @@ router.post("/transaction", async (req, res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const users = await connection.query(`SELECT username from user`);
-        let userkey = "";
-        for(let i = 0; i < users.length; i++) {
-            if(bcrypt.compareSync(users[i].username, username)) {
-                userkey = users[i].username;
-                break;
-            }
-        }
-        if(!userkey) {
-            return res.status(404).json({message: "Cannot find specified username!"}); 
-        }
-
         let result = await connection.query(`SELECT * from post where post_id='${inputs.post_id}' and verified='yes'`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(404).json({message: "No such post exists!"});
         }
 
-        result = await connection.query(`INSERT into transaction VALUES('${userkey}','${inputs.post_id}',${inputs.amount}, CURDATE())`);
+        result = await connection.query(`SELECT * from transaction where post_id='${inputs.post_id}' and user_id='${req.cookies.auth.userkey}'`);
+        if(await result && await result.length != 0) {
+            await connection.query(`UPDATE transaction SET amount = amount + ${inputs.amount} where post_id='${inputs.post_id}' and user_id='${req.cookies.auth.userkey}'`);
+            connection.release();
+            return res.status(200).json({message: "Transaction success"});
+        }
+
+        result = await connection.query(`INSERT into transaction VALUES('${inputs.post_id}', '${req.cookies.auth.userkey}', CURDATE(), ${inputs.amount})`);
         if(!result || result.length == 0) {
+            connection.release();
             return res.status(404).json({message: "No such post exists!"});
         }
 
@@ -326,6 +391,90 @@ router.post("/transaction", async (req, res) => {
     }
 
     res.status(200).json({ message: "Transaction success"});
+});
+
+// get donators for a specific post
+router.get("/donators/:postid", checkCookie, async (req, res) => {
+
+    let transactions = [];
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        transactions = await connection.query(`SELECT transaction.amount AS donation, user.username AS name FROM transaction, user where transaction.post_id='${req.params.postid}' and transaction.user_id=user.userkey`);
+        let isdonator = await connection.query(`SELECT amount FROM transaction where post_id='${req.params.postid}' and user_id='${req.cookies.auth.userkey}'`);
+        
+        if(isdonator && isdonator.length != 0) {
+            connection.release();
+            return res.status(200).json({ message: "Donators retreival success", transactions, donated: true, donatedAmt: isdonator[0].amount});
+        }
+        
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Donators retreival success", transactions, donated: false, donatedAmt: 0});
+});
+
+// get account details 
+router.get("/account", checkCookie, async (req, res) => {
+
+    let account = [];
+    let posts = 0;
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        account = await connection.query(`SELECT * from user where userkey='${req.cookies.auth.userkey}'`);
+        if(!account || account.length == 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Account not found' });
+        }
+        let result = await connection.query(`SELECT * from post where created_user='${req.cookies.auth.userkey}'`);
+        if(result && result.length != 0) {
+            posts = result.length;
+        }
+        
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Account retreival success", account, posts});
+});
+
+// edit an account
+router.put("/account", checkCookie, async (req, res) => {
+
+    const inputs = req.body;
+
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        const account = await connection.query(`UPDATE user SET mail='${inputs.mail}', number='${inputs.number}' where userkey='${req.cookies.auth.userkey}'`);
+        console.log(account);
+        if(!account || account.length == 0) {
+            connection.release();
+            return res.status(404).json({message: "No such account exists"}); 
+        }
+
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Account Updation success"});
 });
 
 function genHash(password) {

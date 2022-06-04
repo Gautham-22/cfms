@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Box, Paper, Typography, Divider, Button, Modal, FormControl, TextField, Snackbar, Alert } from '@mui/material';
+import dateFormat from "dateformat";
 
 const modalStyle = {
     position: 'absolute',
@@ -12,12 +13,18 @@ const modalStyle = {
     boxShadow: 24,
     p: 3.5,
 };
-const Account = () => {
-    let curEmail = "gautham22poy@gmail.com", curNumber = "7598426960";
+const Account = ({isAccount}) => {
+
     const [edit, setEdit] = useState(false);
-    const [email, setEmail] = useState("gautham22poy@gmail.com");
-    const [number, setNumber] = useState("7598426960");
+    const [email, setEmail] = useState("@gmail.com");
+    const [username, setusername] = useState("xyz");
+    const [dateCreated, setDateCreated] = useState("2000/01/01");
+    const [number, setNumber] = useState("0000000000");
+    const [postNum, setPostNum] = useState("0");
+    const [fundRaised, setFundRaised] = useState("0");
+    const [donated, setDonated] = useState("0");
     const [validNumber, setValidNumber] = useState(true);
+    const [saveStatus, setSaveStatus] = useState(false);
     const openDonate = () => setEdit(true);
     const closeDonate = () => setEdit(false);
 
@@ -34,38 +41,102 @@ const Account = () => {
         setNumber(e.target.value); 
         setValidNumber(/^[0-9]+$/.test(e.target.value) || e.target.value==="");
     };
+    const handleSave = async () => {
+        const details = {
+            mail: email,
+            number 
+        };
+
+        try {
+            let res = await fetch("http://localhost:5000/cfms/account", {
+                credentials: 'include',
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(details)
+            });
+            
+            if(!res.ok) {
+                console.log("yes");
+                setOpen(true);
+                return setSaveStatus(false);
+            }
+            
+        } catch(err) {
+            setOpen(true);
+            return setSaveStatus(false);
+        }
+        setSaveStatus(true);
+        setOpen(true);
+
+    }
+
+    useEffect(() => {
+        const fetchAccount = async () => {
+            try {
+                let res = await fetch("http://localhost:5000/cfms/account", {
+                    credentials: 'include',
+                    method: 'GET'
+                });
+                let response = await res.json();
+
+                console.log(await response);
+
+                if(!res.ok) {
+                    // error
+                    return console.log(response);
+                }
+                
+                setusername(response.account[0].username);
+                setDateCreated(dateFormat(new Date(response.account[0].date_created), "dddd, mmmm dS, yyyy"));
+                setNumber(response.account[0].number);
+                setEmail(response.account[0].mail);
+                setFundRaised(response.account[0].fund_raised);
+                setDonated(response.account[0].amt_donated);
+                setPostNum(response.posts);
+
+            } catch(err) {
+                return console.log(err);
+            }
+        };
+        if(isAccount) {
+            fetchAccount();
+        }
+    }, [isAccount]);
 
     return (
         <Box style={{ maxWidth: '1500px', margin: '10px auto' }}>
             <Paper sx={{ maxWidth: '700px', margin: '40px auto', padding: '25px'}} >
                 <Typography style={{marginBottom: '20px'}} variant='h6'>
-                    Gautham Kumar
+                    {username}
                     <span style={{ display: 'inline-block', marginLeft: '20px' }}></span>
-                    <Typography sx={{ display: { xs: 'block', sm: 'inline'}}} variant='caption'>created on 29/05/22</Typography>    
+                    <Typography sx={{ display: { xs: 'block', sm: 'inline'}}} variant='caption'>created on {dateCreated}</Typography>    
                 </Typography>
                 <Divider />
                 <Typography color="primary" variant="button" style={{display: 'block', fontSize: '1.05rem', margin: '20px 0px 10px'}}>Details</Typography>
                 <div>
                     <Typography gutterbottom  style={{display: 'inline-block', lineHeight: '0.4'}}><b><pre>Phone:  </pre></b></Typography>
-                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>7598426960</Typography>
+                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>{number}</Typography>
                 </div>
                 <div style={{marginBottom: '10px'}}>
                     <Typography gutterbottom  style={{display: 'inline-block', lineHeight: '0.4'}}><b><pre>Email:  </pre></b></Typography>
-                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>gautham22poy@gmail.com</Typography>
+                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>{email}</Typography>
                 </div>
                 <Divider />
                 <Typography color="primary" variant="button" style={{display: 'block', fontSize: '1.05rem', margin: '20px 0px 10px'}}>Account</Typography>
                 <div>
                     <Typography gutterbottom  style={{display: 'inline-block', lineHeight: '0.4'}}><b><pre>Number of Posts:  </pre></b></Typography>
-                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>12</Typography>
+                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>{postNum}</Typography>
                 </div>
                 <div>
                     <Typography gutterbottom  style={{display: 'inline-block', lineHeight: '0.4'}}><b><pre>Fund raised:  </pre></b></Typography>
-                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>10000</Typography>
+                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>{fundRaised}</Typography>
                 </div>
                 <div style={{marginBottom: '10px'}}>
                     <Typography gutterbottom  style={{display: 'inline-block', lineHeight: '0.4'}}><b><pre>Donated:  </pre></b></Typography>
-                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>5000</Typography>
+                    <Typography variant="body1"  style={{display: 'inline-block', lineHeight: '0.4'}}>{donated}</Typography>
                 </div>
                 <Divider />
                 <div style={{marginTop: '20px'}}>
@@ -84,7 +155,7 @@ const Account = () => {
                     </Typography>
                     <FormControl>
                         <TextField style={{minWidth: '350px', margin: '20px 0px 10px'}}
-                            variant="outlined" autoComplete="off" disabled value={"Gautham Kumar"}
+                            variant="outlined" autoComplete="off" disabled value={username}
                         />
                         <TextField  
                             id="email" label="Email Id" style={{minWidth: '350px', margin: '10px 0px'}}
@@ -105,17 +176,15 @@ const Account = () => {
                             onChange={handleNumber}
                             autoComplete="off"
                         />}
-                        <Button disabled={email && number && email !== curEmail && number !== curNumber} variant='contained' color="primary" 
-                            onClick={() => {
-                                setOpen("true");
-                            }}
+                        <Button variant='contained' color="primary" 
+                            onClick={handleSave}
                         >Save</Button>
                     </FormControl>
                 </Box>
             </Modal>
             <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
-                <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-                    Saved successfully
+                <Alert onClose={handleClose} severity={saveStatus ? "success" : "error"} sx={{ width: '100%' }}>
+                    {saveStatus ? "Saved successfully! Refresh to see changes" : "Edit failed"}
                 </Alert>
             </Snackbar>
         </Box>

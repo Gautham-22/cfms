@@ -93,7 +93,7 @@
 .App.about .container .card {
     position: relative;
     display: flex;
-    margin: auto 150px;
+    margin: 10px 70px;
     transform: translateX(-150%);
     opacity: 0;
     transition: 0.8s ease;

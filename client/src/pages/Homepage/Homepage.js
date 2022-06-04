@@ -8,7 +8,7 @@ import { SiTwitter } from 'react-icons/si';
 import { SiTelegram } from 'react-icons/si';
 import { FaRedditAlien } from 'react-icons/fa';
 
-function Homepage() {
+function Homepage({login}) {
   return (
     <>
       <div className='App home' id='home'>
@@ -22,7 +22,7 @@ function Homepage() {
             assumenda molestias atque aperiam deserunt ipsam sit expedita,
             repellat ducimus doloribus.
           </span>
-          <a href='#feed' className='feed-btn'>
+          <a href={login ? '/dashboard' : '/login'} className='feed-btn'>
             Start a Fundraiser
           </a>
         </div>

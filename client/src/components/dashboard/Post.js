@@ -3,8 +3,9 @@ import {Card, CardContent, CardHeader, Chip, Stack, Typography,
   Button, CardActionArea, CardActions, Divider, Slider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import dateFormat from "dateformat";
 
-const Post = ({openDonate}) => {
+const Post = ({openDonate, post, setIsView, setPostId, id, tab, setDonateTo}) => {
   const PrettoSlider = styled(Slider)({
     color: '#52af77',
     height: 8,
@@ -43,44 +44,50 @@ const Post = ({openDonate}) => {
       },
     },
   });
-  const [tab, setTab] = useState("feed");
 
-  const content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \
-  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  console.log({post});
+  const handleView = () => {
+    setIsView(true);
+    setPostId(id);
+  }
+
   return (
-    <Card sx={{ maxWidth: 325 }} style={{ boxShadow: "5px 5px 15px", margin: "30px" }}>
+    <Card sx={{ minHeight:360, width: 325 }} style={{ boxShadow: "5px 5px 15px", margin: "30px" }}>
       <CardHeader
-        title="Plant Monitoring System"
-        subheader="Sep 24, 2020"
+        title={post.title}
+        subheader={dateFormat(new Date(post.date_created), "dddd, mmmm dS, yyyy")}
       />
-      <CardActionArea>
+      <CardActionArea onClick={handleView}>
         <CardContent>
           <Typography variant="body2" color="text.secondary">
-            {content.substring(0,100) + "..."}
+            {post.description.substring(0,100) + "..."}
           </Typography>
         </CardContent>
       </CardActionArea>
       <Divider />
       <CardContent>
       <Stack direction="row" spacing={1} style={{marginBottom: "10px"}}>
-        <Chip label="Agriculture" />
-        <Chip label="Education" variant="outlined" />
+        {post.category ? <Chip label={post.category} /> : <Chip label="other" />}
       </Stack>
       <PrettoSlider
         valueLabelDisplay='auto'
         aria-label="pretto slider"
-        value={(10000*100)/40000}
-        marks={[{value: (10000*100)/40000, label: '%'}]}
+        value={Math.round((post.fund_raised * 100 /post.expected_fund) * 100) / 100}
+        marks={[{value: Math.round((post.fund_raised * 100 / post.expected_fund) * 100) / 100, label: '%'}]}
       />
       </CardContent>
       <CardActions style={{justifyContent: "space-between"}}>
-        {tab === "donated" && <Button color="primary">Donated ₹5000</Button>}
+        {tab === "donated" && <Button color="primary">Donated ₹{post.amount}</Button>}
         {tab === "feed" && 
-          <Button size="small" color="primary" onClick={() => openDonate()}>
+          <Button size="small" color="primary" onClick={() => {setDonateTo(id); openDonate();}}>
            ₹ Donate
           </Button>
         }
-        <Button size="small" color="secondary">
+        {tab === "created" && (post.verified === "yes" 
+          ? <Typography variant='button' style={{color: '#2e7d32', marginLeft: '8px'}}>verified</Typography>
+          : <Typography variant='button' style={{color: 'rgb(244, 67, 54)', marginLeft: '8px'}}>not verified</Typography>
+        )}
+        <Button size="small" color="secondary" onClick={handleView}>
             More
         </Button>
       </CardActions>
