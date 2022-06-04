@@ -25,11 +25,11 @@ const checkCookie = async (req, res, next) => {
     }
 
     const { log, userkey } = req.cookies.auth;
-    console.log({ log, userkey });
+
     if(!bcrypt.compareSync(process.env.success, log) || !userkey) {
         return res.status(401).json({message: "Please Login/Signup"});
     }
-    console.log("yes");
+
     next();
 }
 
@@ -75,7 +75,6 @@ router.post("/signup", async (req,res) => {
             return res.status(500).json({message: "Insertion failed!"});
         }
         
-        console.log(auth);
         res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000, httpOnly: true, path: "/"});
 
         connection.release();
@@ -113,7 +112,7 @@ router.post("/login",  async (req,res) => {
             log: genHash(process.env.success),
             userkey: result[0].userkey
         }
-        console.log(auth)
+
         res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000, httpOnly: true, path: "/"});
 
         connection.release();
@@ -141,8 +140,7 @@ router.post("/post", checkCookie, async (req, res) => {
             connection.release();
             return res.status(404).json({message: "No user exists"}); 
         }
-        console.log(user);
-        console.log(inputs.description.length);
+
         const id = uuidv4();
         const verified = "no";
         let desc = inputs.description;
@@ -175,7 +173,7 @@ router.put("/post", checkCookie, async (req, res) => {
         }
 
         const post = await connection.query(`UPDATE post SET title='${inputs.title}', description='${inputs.description}', category='${inputs.category}' where post_id='${inputs.id}' and created_user='${req.cookies.auth.userkey}'`);
-        console.log(post);
+     
         if(!post || post.length == 0) {
             connection.release();
             return res.status(404).json({message: "No such post exists"}); 
@@ -268,7 +266,7 @@ router.get("/posts/donated", checkCookie, async (req, res) => {
         }
 
         posts = await connection.query(`SELECT *, transaction.amount FROM post, transaction where post.post_id=transaction.post_id and transaction.user_id='${req.cookies.auth.userkey}'`);
-        console.log(posts);
+        
         connection.release();
 
     } catch(err) {
@@ -278,8 +276,32 @@ router.get("/posts/donated", checkCookie, async (req, res) => {
     res.status(200).json({ message: "Post retreival success", posts});
 });
 
+// admin credentials
+const adminCookie = async (req, res, next) => {
+    if(!req.cookies.adminAuth || !req.cookies.adminAuth.log || !req.cookies.adminAuth.adminkey) {
+        return res.status(401).json({message: "Please Login/Signup"});
+    }
+
+    const { log, adminkey } = req.cookies.adminAuth;
+    console.log({ log, adminkey });
+    if(!bcrypt.compareSync(process.env.admin_log, log) || !bcrypt.compareSync(process.env.admin_name, adminkey)) {
+        return res.status(401).json({message: "Please Login/Signup"});
+    }
+    next();
+}
+
+router.get("/adminCredentials", adminCookie, (req,res) => {
+    res.status(200).json({message: 'authenticated'});
+});
+
+// admin logout
+router.get("/adminlogout", adminCookie, (req,res) => {
+    res.clearCookie("adminAuth");
+    res.end();
+});
+
 // admin login
-router.get(`${process.env.secret_route}`, async (req,res) => {
+router.post(`${process.env.secret_route}`, async (req,res) => {
     const inputs = req.body;
     
     try {
@@ -288,13 +310,18 @@ router.get(`${process.env.secret_route}`, async (req,res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const result = await connection.query(`SELECT pass from adm_user where username='${inputs.username}'`);
+        const result = await connection.query(`SELECT * from admin`);
         if(!result || result.length == 0) {
             connection.release();
-            return res.status(404).json({message: "Admin Username doesn't exist!"});
+            return res.status(404).json({message: "Admin table doesn't exist!"});
         }
 
-        if(!bcrypt.compareSync(inputs.password, result[0].pass)) {
+        if(!bcrypt.compareSync(inputs.username, result[0].name)) {
+            connection.release();
+            return res.status(401).json({message: "Admin username doesn't match!"});
+        }
+
+        if(!bcrypt.compareSync(inputs.password, result[0].password)) {
             connection.release();
             return res.status(401).json({message: "Admin Password doesn't match!"});
         }
@@ -307,22 +334,14 @@ router.get(`${process.env.secret_route}`, async (req,res) => {
 
     const auth = {
         log: genHash(process.env.admin_log),
-        username: genHash(inputs.username)
+        adminkey: genHash(inputs.username)
     }
-    res.cookie("auth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000});
+    res.cookie("adminAuth", auth, {maxAge: 3 * 24 * 60 * 60 * 1000});
     res.status(200).json({ message: "Admin Login success"});
 });
 
-// admin verifies post
-router.put(`${process.env.secret_route}/verify/:postid`, async (req, res) => {
-    if(!req.cookies.auth || !req.cookies.auth.log || !req.cookies.auth.username) {
-        return res.status(401).json({message: "Login/Signup"});
-    }
-
-    const { log, username } = req.cookies.auth;
-    if(!bcrypt.compareSync(process.env.admin_log, log) || !username) {
-        return res.status(401).json({message: "Login/Signup"});
-    }
+// retreive all non verified posts
+router.get("/admin/posts", adminCookie, async (req, res) => {
 
     let posts = [];
     try {
@@ -331,17 +350,31 @@ router.put(`${process.env.secret_route}/verify/:postid`, async (req, res) => {
             return res.status(500).json({message: "Database connection failed!"})
         }
 
-        const result = await connection.query(`SELECT username from adm_user`);
-        if(!result || result.length == 0) {
-            return res.status(404).json({message: "Error while fetching admin!"});
-        }
+        posts = await connection.query(`SELECT * FROM post`);
 
-        if(!bcrypt.compareSync(result[0].username, username)) {
-            return res.status(401).json({message: "Unauthorized to view this route"});
-        }        
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Post retreival success", posts});
+});
+
+// admin verifies post
+router.put(`${process.env.secret_route}/verify/:postid`, adminCookie, async (req, res) => {
+
+    let postUpdated = [];
+
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
 
         postUpdated = await connection.query(`Update post set verified='yes' where post_id='${req.params.postid}'`);
         if(!postUpdated || postUpdated.length == 0) {
+            connection.release();
             return res.status(404).json({message: "No such post exist!"});
         }
 
@@ -352,6 +385,31 @@ router.put(`${process.env.secret_route}/verify/:postid`, async (req, res) => {
     }
 
     res.status(200).json({ message: "Post verified!"});
+});
+
+// admin view post
+router.get("/admin/post/:postid", adminCookie, async (req, res) => {
+
+    let posts = [];
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        posts = await connection.query(`SELECT * from post where post_id='${req.params.postid}'`);
+    
+        if(!posts || posts.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: "No such post exists"});
+        }
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Post retreival success", posts });
 });
 
 // transaction
@@ -462,7 +520,6 @@ router.put("/account", checkCookie, async (req, res) => {
         }
 
         const account = await connection.query(`UPDATE user SET mail='${inputs.mail}', number='${inputs.number}' where userkey='${req.cookies.auth.userkey}'`);
-        console.log(account);
         if(!account || account.length == 0) {
             connection.release();
             return res.status(404).json({message: "No such account exists"}); 
@@ -489,32 +546,3 @@ function genSecret() {
 }
 
 module.exports = router;
-
-// const nodemailer = require("nodemailer");
-
-// function sendPublicKey(key, email) {
-//     try {
-//         const Transport = nodemailer.createTransport({
-//             service : "Gmail",
-//             auth : {
-//                 user : process.env.email,
-//                 pass : process.env.password 
-//             }
-//         });
-//         const mailOptions = {
-//             from : "Crypto wallet",
-//             to : email,
-//             subject : "Public key for Crpyto wallet",
-//             html : `<p>Hey, thanks for signing into our app.</p><p><b>Public key: </b> ${key.substr(0,10)}</p><p>Use this for future logins.</p>`
-//         };
-//         return Transport.sendMail(mailOptions,(err,res) => {
-//             if(err) {
-//                 console.log(err);
-//             }else {
-//                 console.log("Successfully sent email!");
-//             }
-//         })
-//     } catch(err) {
-//         console.log(err);
-//     }
-// }

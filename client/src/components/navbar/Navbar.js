@@ -6,11 +6,10 @@ import {
 import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import AdbIcon from '@mui/icons-material/Adb';
-import ReactDom from "react-dom";
 import { useNavigate } from 'react-router-dom';
 
-const pages = ['Home', 'About', 'Contact'];
-const settings = [ 'Account', 'Dashboard', 'Logout'];
+let pages = ['Home', 'About', 'Contact'];
+let settings = [ 'Account', 'Dashboard', 'Logout'];
 const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
         backgroundColor: '#44b700',
@@ -39,7 +38,13 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
         },
     },
 }));
-const Navbar = ({setLogin, setIsAccount}) => {
+const Navbar = ({setLogin, setIsAccount, adminLogin, setAdminLogin}) => {
+
+    if(adminLogin) {
+        pages = ['Admin'];
+        settings = ['Logout'];
+    }
+
     const navigate =  useNavigate();
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
@@ -54,7 +59,9 @@ const Navbar = ({setLogin, setIsAccount}) => {
   
     const handleCloseNavMenu = (event) => {
       setAnchorElNav(null);
-      window.open(`/#${event.target.textContent.toLowerCase()}`, '_blank', 'noopener,noreferrer')
+      if(!adminLogin) {
+        window.open(`/#${event.target.textContent.toLowerCase()}`, '_blank', 'noopener,noreferrer')
+      }
     };
 
     return (
@@ -183,7 +190,22 @@ const Navbar = ({setLogin, setIsAccount}) => {
                     <MenuItem key={setting} selected={setting === settingValue} onClick={() => {
                         setAnchorElUser(null);
                         setSettingValue(setting);
-                        if(setting === 'Logout') {
+                        if(adminLogin && setting === 'Logout') {
+                            const logout = async () => {
+                                try {
+                                    let res = await fetch("http://localhost:5000/cfms/adminlogout", {
+                                        credentials: 'include',
+                                        method: 'GET',
+                                    });
+
+                                    setAdminLogin(false);
+                                    navigate("login");
+                                } catch(err) {
+                                    console.log(err);
+                                }
+                            }
+                            logout();
+                        } else if(setting === 'Logout') {
                             setIsAccount(false);
                             const logout = async () => {
                                 try {
