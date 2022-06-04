@@ -8,13 +8,17 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 });
 
 const NewPost = () => {
+    const categories = [];
+
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
     const [desc, setDesc] = useState('');
     const [amount, setAmount] = useState('');
     const [validAmount, setValidAmount] = useState(true);
 
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [alertMsg, setAlertMsg] = useState("Post created successfully!");
+    const [reqStatus, setReqStatus] = useState("success");
   
     const handleClose = (event, reason) => {
       if (reason === 'clickaway') {
@@ -30,11 +34,46 @@ const NewPost = () => {
     };
 
     const handleSubmit = (e) => {
-        setOpen(true);
-        setTitle("");
-        setCategory("");
-        setDesc("");
-        setAmount("");
+        const postFields = {
+            title,
+            type: category,
+            description: desc,
+            expected_fund: amount
+        };
+
+        const createPost = async () => {
+            try {
+                let res = await fetch("http://localhost:5000/cfms/post", {
+                    credentials: 'include',
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(postFields)
+                });
+                
+                let response = await res.json();
+                if(!res.ok) {
+                    setAlertMsg("Error while post creation!");
+                    setReqStatus("error");
+                } else {
+                    setAlertMsg("Post created successfully!");
+                    setReqStatus("success");
+                    setTitle("");
+                    setCategory("");
+                    setDesc("");
+                    setAmount("");
+                }
+            } catch(err) {
+                setAlertMsg("Internal server error!");
+                setReqStatus("error");
+            }
+            setOpen(true);
+            console.log(alertMsg);
+        }
+        createPost();
+
     }
 
     return (
@@ -48,7 +87,8 @@ const NewPost = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    boxShadow: "2px 3px 20px -5px"
+                    boxShadow: "2px 3px 20px -5px", 
+                    background: '#f4f4f4'
                 }}
             >
                 <TextField 
@@ -61,6 +101,7 @@ const NewPost = () => {
                     value={amount} onChange={handleAmount} autoFocus={true}
                 />}
                 {!validAmount && <TextField
+                    style={{minWidth: '350px', margin: '10px 0px'}}
                     error autoFocus={true}
                     id="outlined-error" 
                     label="Invalid amount"
@@ -69,7 +110,7 @@ const NewPost = () => {
                 />}
                 <TextareaAutosize
                     aria-label="empty textarea" placeholder="Description"  minRows={5}
-                    style={{ maxWidth: '370px', margin: '10px 0px', padding:'10px' }}
+                    style={{ width: '450px', margin: '10px 0px', padding:'10px' }}
                     value={desc} onChange={(e) => setDesc(e.target.value)}
                 />
                 <Select
@@ -83,11 +124,11 @@ const NewPost = () => {
                     <MenuItem value="">
                         <em>None</em>
                     </MenuItem>
-                    <MenuItem value={10}>Business</MenuItem>
-                    <MenuItem value={20}>Startup</MenuItem>
-                    <MenuItem value={30}>Agriculture</MenuItem>
-                    <MenuItem value={40}>Education</MenuItem>
-                    <MenuItem value={50}>Social</MenuItem>
+                    <MenuItem value={"Business"}>Business</MenuItem>
+                    <MenuItem value={"Startup"}>Startup</MenuItem>
+                    <MenuItem value={"Agriculture"}>Agriculture</MenuItem>
+                    <MenuItem value={"Education"}>Education</MenuItem>
+                    <MenuItem value={"Social"}>Social</MenuItem>
                 </Select>
                 <FormHelperText>Select category</FormHelperText>
                 <Stack direction="row" spacing={2} style={{marginTop: '20px', display: 'flex', justifyContent: 'space-between'}}>
@@ -107,8 +148,8 @@ const NewPost = () => {
             </Box>
         </FormControl>
         <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
-            <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-                Post created successfully!
+            <Alert onClose={handleClose} severity={reqStatus} sx={{ width: '100%' }}>
+                {alertMsg}
             </Alert>
         </Snackbar>
     </Box>

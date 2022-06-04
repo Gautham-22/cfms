@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { 
     Box, Tabs, Tab, Badge, FormControl,
     Button, Typography, Modal, TextField, Snackbar, Alert
@@ -9,6 +9,7 @@ import Feed from './Feed';
 import View from './View';
 import Post from './Post';
 import EditPost from './EditPost';
+import "./main.css";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -50,22 +51,40 @@ const modalStyle = {
     p: 3.5,
 };
 
-const Main = () => {
+const Main = ({login, setAppnav}) => {
+    setAppnav(true);
+    const [posts, setPosts] = useState([]);
     const [value, setValue] = useState(0);
     const [donate, setDonate] = useState(false);
+    const [isView, setIsView] = useState(false);
+    const [postId, setPostId] = useState('');
     const [donateAmount, setDonateAmount] = useState("");
+    const [donateTo, setDonateTo] = useState(null);
+    const [donationStatus, setDonationStatus] = useState(false);
+    const [editStatus, setEditStatus] = useState(false);
     const [validAmount, setValidAmount] = useState(true);
+    const [isEdit , setIsEdit] = useState(false);
+    const [editPost , setEditPost] = useState(null);
     const openDonate = () => setDonate(true);
     const closeDonate = () => setDonate(false);
 
-    const [open, setOpen] = useState(false);
+    const [openAlert, setOpenAlert] = useState(false);
+    const [editAlert, setEditAlert] = useState(false);
+  
+    const handleEditClose = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+  
+      setEditAlert(false);
+    };
   
     const handleClose = (event, reason) => {
       if (reason === 'clickaway') {
         return;
       }
   
-      setOpen(false);
+      setOpenAlert(false);
     };
 
     const handleAmount = (e) => {
@@ -73,21 +92,97 @@ const Main = () => {
         setValidAmount(/^[0-9]+$/.test(e.target.value) || e.target.value==="");
     };
 
+    const handleDonate = async () => {
+        if(!donateTo) {
+            return console.log("Post id is null");
+        }
+        try {
+            let res = await fetch("http://localhost:5000/cfms/transaction", {
+                credentials: 'include',
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({post_id: donateTo, amount: donateAmount})
+            });
+            let response = await res.json();
+            console.log(await response)
+            if(!res.ok) {
+                // error
+                setDonationStatus(false);
+                setOpenAlert(true);
+                return console.log(response);
+            }
+            setDonationStatus(true);
+            setOpenAlert(true);
+        } catch(err) {
+            setDonationStatus(false);
+            setOpenAlert(true);
+            return console.log(err);
+        }
+        setDonateAmount("");
+        console.log({donateTo, donateAmount});
+    }
+
     const handleChange = (event, newvalue) => {
         setValue(newvalue);
     }
 
+    useEffect(() => {
+        
+        const fetchPosts = async () => {
+            const url = ["http://localhost:5000/cfms/posts", "http://localhost:5000/cfms/posts/created", "http://localhost:5000/cfms/posts/donated"];
+            try {
+                let res = await fetch(url[value], {
+                    credentials: 'include',
+                    method: 'GET'
+                });
+                let response = await res.json();
+                if(!res.ok) {
+                    // error
+                    return console.log(response);
+                }
+                setPosts(response.posts);
+            } catch(err) {
+                console.log(err);
+            }
+        }
+        if(value <= 2) {
+            fetchPosts();
+        }
+        
+    }, [value]);
+
     return (
         <div>
-            <Box sx={{ width: '100%', bgcolor: 'background.paper', marginTop: '30px' }}>
-                <Tabs value={value} onChange={handleChange} centered>
+            <Box sx={{ width: '100%', marginTop: '30px' }}>
+                {(!isView && !isEdit) ? <Tabs value={value} onChange={handleChange} centered>
                     <Tab label="Feed" />
                     <Tab label="My posts" />
                     <Tab label="Donated" />
                     <Tab label="New post" />
-                </Tabs>
+                </Tabs> :
+                <Button style={{position:'absolute', left: '7%'}} variant='contained' color="secondary" 
+                    onClick={() => {
+                        if(isView) {
+                            setIsView(false);
+                        }
+                        if(isEdit) {
+                            setIsEdit(false);
+                        }
+                    }}
+                ><pre>&lt;- Back</pre></Button>
+                }
             </Box>
-            <Feed openDonate={openDonate} />
+            {!isEdit && !isView && value <= 2 && <Feed openDonate={openDonate} setPostId={setPostId} value={value} setIsView={setIsView} setDonateTo={setDonateTo} posts={posts} /> }
+            {!isEdit && !isView && value == 3 && <NewPost />}
+            {isView && !isEdit && <View openDonate={openDonate} setDonateTo={setDonateTo} postId={postId} 
+            setIsView={setIsView} isView={isView} setIsEdit={setIsEdit} setEditPost={setEditPost}
+            />}
+            {isEdit && !isView && <EditPost postId={postId} editPost={editPost} setIsView={setIsView} setIsEdit={setIsEdit} setEditStatus={setEditStatus} 
+                setEditAlert={setEditAlert}
+            />}
             <Modal
                 open={donate}
                 onClose={closeDonate}
@@ -114,17 +209,21 @@ const Main = () => {
                             autoComplete="off"
                         />}
                         <Button disabled={donateAmount === "" || !validAmount} variant='contained' color="primary" 
-                            onClick={() => {
-                                setOpen("true");
-                                setDonateAmount("");
-                            }}
+                            onClick={handleDonate}
                         >Donate</Button>
                     </FormControl>
                 </Box>
             </Modal>
-            <Snackbar open={open} autoHideDuration={6000} onClose={handleClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
-                <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-                    Donated successfully
+            <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
+                <Alert onClose={handleClose} severity={donationStatus ? "success" : "error"} sx={{ width: '100%' }}>
+                    Donation {donationStatus ? "success\n" : "failed"}
+                    {donationStatus && "Refresh to see your donation"}
+                </Alert>
+            </Snackbar>
+            <Snackbar open={editAlert} autoHideDuration={6000} onClose={handleEditClose} style={{ left: '50%', transform: 'translate(-50%,0%)' }}>
+                <Alert onClose={handleEditClose} severity={editStatus ? "success" : "error"} sx={{ width: '100%' }}>
+                    Edit {editStatus ? "success\n" : "failed"}
+                    {editStatus && "! Refresh to see the updates"}
                 </Alert>
             </Snackbar>
         </div>

@@ -6,8 +6,10 @@ import {
 import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import AdbIcon from '@mui/icons-material/Adb';
+import ReactDom from "react-dom";
+import { useNavigate } from 'react-router-dom';
 
-const pages = ['About', 'FAQS', 'Team'];
+const pages = ['Home', 'About', 'Contact'];
 const settings = [ 'Account', 'Dashboard', 'Logout'];
 const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -37,7 +39,8 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
         },
     },
 }));
-const Navbar = () => {
+const Navbar = ({setLogin, setIsAccount}) => {
+    const navigate =  useNavigate();
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [settingValue, setSettingValue] = useState("Dashboard");
@@ -49,8 +52,9 @@ const Navbar = () => {
       setAnchorElUser(event.currentTarget);
     };
   
-    const handleCloseNavMenu = () => {
+    const handleCloseNavMenu = (event) => {
       setAnchorElNav(null);
+      window.open(`/#${event.target.textContent.toLowerCase()}`, '_blank', 'noopener,noreferrer')
     };
 
     return (
@@ -146,44 +150,67 @@ const Navbar = () => {
             </Box>
 
             <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <StyledBadge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        variant="dot"
-                    >
-                        <Avatar src="/broken-image.jpg" />
-                    </StyledBadge>
-                </IconButton>
-            </Tooltip>
-            <Menu
-                sx={{ mt: '45px' }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={() => {
-                    setAnchorElUser(null);
+                <Tooltip title="Open settings">
+                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                        <StyledBadge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            variant="dot"
+                        >
+                            <Avatar src="/broken-image.jpg" />
+                        </StyledBadge>
+                    </IconButton>
+                </Tooltip>
+                <Menu
+                    sx={{ mt: '45px' }}
+                    id="menu-appbar"
+                    anchorEl={anchorElUser}
+                    anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
                     }}
-                >
-                {settings.map((setting) => (
-                <MenuItem key={setting} selected={setting === settingValue} onClick={() => {
-                    setAnchorElUser(null);
-                    setSettingValue(setting);
-                }}>
-                    <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-                ))}
-            </Menu>
+                    keepMounted
+                    transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                    }}
+                    open={Boolean(anchorElUser)}
+                    onClose={() => {
+                        setAnchorElUser(null);
+                        }}
+                    >
+                    {settings.map((setting) => (
+                    <MenuItem key={setting} selected={setting === settingValue} onClick={() => {
+                        setAnchorElUser(null);
+                        setSettingValue(setting);
+                        if(setting === 'Logout') {
+                            setIsAccount(false);
+                            const logout = async () => {
+                                try {
+                                    let res = await fetch("http://localhost:5000/cfms/logout", {
+                                        credentials: 'include',
+                                        method: 'GET',
+                                    });
+                                    console.log(res);
+                                    setLogin(false);
+                                    navigate("/login");
+                                } catch(err) {
+                                    console.log(err);
+                                }
+                            }
+                            logout();
+                        } else if(setting === 'Dashboard') {
+                            setIsAccount(false);
+                            navigate("/dashboard");
+                        } else {
+                            setIsAccount(true);
+                            navigate("/account");
+                        }
+                    }}>
+                        <Typography textAlign="center">{setting}</Typography>
+                    </MenuItem>
+                    ))}
+                </Menu>
             </Box>
         </Toolbar>
         </Container>
