@@ -1,6 +1,6 @@
 import React from 'react';
 import './Aboutus.css';
-import { BsChevronDoubleRight } from 'react-icons/bs';
+// import { BsChevronDoubleRight } from 'react-icons/bs';
 
 function Aboutus() {
   return (

@@ -154,7 +154,7 @@
 
 @media (max-width: 850px) {
     .App.about {
-        margin-top: 10vh;
+        margin-top: 5vh;
         justify-content: start;
     }
 
@@ -214,10 +214,6 @@
         opacity: 0;
         transition: 0.8s ease;
         transition-delay: calc(var(--k) * 120ms);
-    }
-
-    .App.about .container .card:nth-of-type(3) {
-        display: none;
     }
 
     .App.about .container .card img {

@@ -223,3 +223,17 @@
   transform: scale(1.4);
   cursor: pointer;
 }
+
+@media screen and (max-width: 500px) {
+  .App.home .text-container {
+    top:10%;
+    left: 13%;
+    max-width: 70%;
+  }
+  .App.home .text-container h1 {
+    font-size: 35px;
+  }
+  .App.home .text-container h2 {
+    font-size: 20px;
+  }
+}
