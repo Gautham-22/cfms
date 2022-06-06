@@ -291,6 +291,26 @@ const adminCookie = async (req, res, next) => {
     next();
 }
 
+// get stats
+router.get("/stats", async (req,res) => {
+    let stats = [];
+    try {
+        const connection = await pool.getConnection();
+        if(!connection) {
+            return res.status(500).json({message: "Database connection failed!"})
+        }
+
+        stats = await connection.query(`SELECT * FROM stats`);
+
+        connection.release();
+
+    } catch(err) {
+        return res.status(500).json({ message: err.message });
+    }
+
+    res.status(200).json({ message: "Stats retreival success", stats});
+})
+
 router.get("/adminCredentials", adminCookie, (req,res) => {
     res.status(200).json({message: 'authenticated'});
 });

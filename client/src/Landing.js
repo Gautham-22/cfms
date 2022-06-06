@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 //pages
@@ -11,6 +11,29 @@ import { BiMenuAltRight } from 'react-icons/bi';
 import { AiOutlineClose } from 'react-icons/ai';
 
 function Landing({login, setAppnav}) {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const getStats = async () => {
+      try {
+        let res = await fetch('http://localhost:5000/cfms/stats', {
+          credentials: 'include',
+          method: 'GET',
+        });
+        if(!res.ok) {
+          console.log(res);
+          return;
+        }
+        const response = await res.json();
+        setStats(response.stats[0]);
+
+      } catch (err) {
+        // console.log(err);
+      }
+    };
+    getStats();
+  }, []);
+
   setAppnav(false);
   return (
     <>
@@ -30,7 +53,7 @@ function Landing({login, setAppnav}) {
           {login && <a href='/dashboard'>Dashboard</a>}
         </ul>
       </div>
-      <Homepage login={login} />
+      <Homepage login={login} stats={stats} />
       <AboutUs />
       <Contact />
     </>

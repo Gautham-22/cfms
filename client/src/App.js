@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './Landing';
 import Login from './components/loginSignupPage/Login';
 import SignUp from './components/loginSignupPage/Signup';
@@ -15,7 +15,6 @@ const App = () => {
   const [adminLogin, setAdminLogin] = useState(false);
   const [appnav, setAppnav] = useState(false);
   const [isAccount, setIsAccount] = useState(false);
-  console.log(process.env.REACT_APP_ADMIN_LOGIN);
 
   useEffect(() => {
     const getCredentials = async () => {
