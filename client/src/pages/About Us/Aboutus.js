@@ -13,9 +13,8 @@ function Aboutus() {
           <p>
             Vision <br />
             <i>
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. Natus
-              provident obcaecati quam quisquam placeat officia laborum alias
-              pariatur voluptate nostrum.
+            To become the world’s trusted online giving platform and making fund raising possible 
+            in most of the categories. Create a community that nutures humanity.
             </i>
           </p>
         </div>
@@ -25,9 +24,9 @@ function Aboutus() {
           <p>
             Mission <br />
             <i>
-              Voluptatum asperiores id atque consequuntur temporibus! Autem
-              delectus quo maxime natus impedit placeat deleniti veniam
-              mollitia.
+            Humanity is at the core of our being. And our mission is to augment this through crowdfunding and nuture humanity by connecting the society for a good cause.
+We make crowdfunding accessible for all. At Raise For a Cause, we believe your inspiration should be shared with everyone. 
+Because that is how change happens.. By giving people the tools they need to capture and share their story far and wide, we have built this website and we are just getting started.
             </i>
           </p>
         </div>
@@ -38,9 +37,8 @@ function Aboutus() {
             USP
             <br />
             <i>
-              Fugit quidem, similique odit, dolorum error deleniti voluptatem
-              libero ducimus eum cupiditate neque beatae fugiat iste consequatur
-              itaque hic modi eaque nesciunt!
+              
+Although there are more crowdfunding websites out there, they are existing for a particular category. we will be acting as a one stop platform to all the categories. We also eliminate scams by allowing only verified fundraisers to get listed.
             </i>
           </p>
         </div>
